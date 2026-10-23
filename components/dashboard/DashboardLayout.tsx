@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -21,14 +22,39 @@ export default function DashboardLayout({
   onToggleMemberView,
 }: DashboardLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading, logout, isDemoMode } = useAuth();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
+  // Protected route guard: Redirect to signin if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace(`/signin?from=${encodeURIComponent(pathname)}`);
+    }
+  }, [user, loading, router, pathname]);
+
   const isLate = memberView === "late";
-  const userAvatar = isLate
-    ? "/assets/dashboard/leclerc-avatar.png"
-    : "/assets/dashboard/hamilton-avatar.png";
-  const userName = isLate ? "Charles Leclerc" : "Lewis Hamilton";
+  const defaultFallbackName = isLate ? "Charles Leclerc" : "Lewis Hamilton";
+  const displayName = user?.displayName || user?.email?.split("@")[0] || defaultFallbackName;
+  const userEmail = user?.email || "member@gdgoc.telu";
+  const userInitials = displayName
+    .split(" ")
+    .map((word: string) => word[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() || "MB";
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/signin");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
 
   // Determine active item from prop or pathname
   let currentActive = activeItem;
@@ -109,6 +135,30 @@ export default function DashboardLayout({
     },
   ];
 
+  // Loading skeleton while verifying auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="relative w-12 h-12 animate-pulse">
+            <Image
+              src="/assets/dashboard/gdg-logo-square.png"
+              alt="GDG Logo"
+              fill
+              className="object-contain"
+            />
+          </div>
+          <span className="text-sm font-medium text-dark/70">Memverifikasi sesi...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If unauthenticated, return null while redirect is in flight
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-surface flex text-dark antialiased">
       {/* Mobile Sidebar Backdrop */}
@@ -126,7 +176,7 @@ export default function DashboardLayout({
         }`}
       >
         <div className="flex flex-col">
-          {/* Brand Header (x=16, y=11 in Figma) */}
+          {/* Brand Header */}
           <div className="h-[64px] px-4 flex items-center justify-between border-b border-[#F0F0F0]">
             <Link href="/dashboard" className="flex items-center gap-2.5">
               <div className="relative w-[38px] h-[38px] shrink-0">
@@ -149,12 +199,11 @@ export default function DashboardLayout({
 
             <button
               onClick={() => setSidebarOpen(false)}
-              className="text-gray-medium hover:text-dark p-1 rounded-md transition-colors"
-              title="Sidebar layout"
+              className="text-gray-medium hover:text-dark p-1 rounded-md transition-colors md:hidden"
+              title="Close sidebar"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <rect x="3" y="4" width="18" height="16" rx="2" strokeWidth={1.6} />
-                <path d="M9 4v16" strokeWidth={1.6} />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
@@ -197,25 +246,31 @@ export default function DashboardLayout({
           </div>
         </div>
 
-        {/* Sidebar Footer User Profile (Figma bottom card) */}
+        {/* Sidebar Footer User Profile */}
         <div className="p-3">
           <div className="bg-[#F6F6F6] border border-[#EDEDED] rounded-[8px] p-2.5">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="relative w-[36px] h-[36px] rounded-full overflow-hidden border border-[#E6E6E6] bg-white shrink-0">
-                  <Image
-                    src={userAvatar}
-                    alt={userName}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="font-medium text-[13.5px] leading-tight text-dark tracking-tight">
-                    {userName}
+              <div className="flex items-center gap-2.5 min-w-0">
+                {user.photoURL ? (
+                  <div className="relative w-[36px] h-[36px] rounded-full overflow-hidden border border-[#E6E6E6] bg-white shrink-0">
+                    <Image
+                      src={user.photoURL}
+                      alt={displayName}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-[36px] h-[36px] rounded-full bg-[#4383F3] text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs">
+                    {userInitials}
+                  </div>
+                )}
+                <div className="flex flex-col text-left min-w-0">
+                  <span className="font-medium text-[13.5px] leading-tight text-dark tracking-tight truncate">
+                    {displayName}
                   </span>
-                  <span className="text-[11.5px] text-gray-medium leading-tight mt-0.5">
-                    Member
+                  <span className="text-[11px] text-gray-medium leading-tight mt-0.5 truncate max-w-[120px]" title={userEmail}>
+                    {userEmail}
                   </span>
                 </div>
               </div>
@@ -260,23 +315,24 @@ export default function DashboardLayout({
 
             {/* Log Out Button */}
             <div className="mt-2 pt-2 border-t border-[#EDEDED]">
-              <Link
-                href="/signin"
-                className="flex items-center gap-2 text-[#EA4335] text-[13px] font-medium hover:bg-red-50/60 rounded px-1.5 py-1 transition-colors w-full"
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-[#EA4335] text-[13px] font-medium hover:bg-red-50/60 rounded px-1.5 py-1 transition-colors w-full text-left cursor-pointer"
               >
                 <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
                 <span>Log Out</span>
-              </Link>
+              </button>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Main Content Area (offset by 265px on desktop) */}
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 md:ml-[265px]">
-        {/* Top Header Bar (h=60px in Figma) */}
+        {/* Top Header Bar */}
         <header className="sticky top-0 z-30 h-[60px] bg-surface/90 backdrop-blur-md border-b border-[#E3E3E3]/80 px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Mobile Hamburger */}
@@ -298,7 +354,15 @@ export default function DashboardLayout({
 
           {/* Right Header Elements */}
           <div className="flex items-center gap-3">
-            {/* Member View Switcher (Interactive toggle between New and Late member views!) */}
+            {/* Demo Mode Badge */}
+            {isDemoMode && (
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEF7E0] border border-[#F9AB00]/40 text-[#B06000] text-[11px] font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#F9AB00]" />
+                <span>Demo Auth</span>
+              </span>
+            )}
+
+            {/* Member View Switcher */}
             {onToggleMemberView && (
               <div className="hidden lg:flex items-center bg-white border border-[#E6E6E6] rounded-full p-0.5 text-xs">
                 <button
@@ -326,7 +390,7 @@ export default function DashboardLayout({
               </div>
             )}
 
-            {/* Search Pill Input (w=259px, h=37px, rx=18.5) */}
+            {/* Search Pill Input */}
             <div className="relative hidden sm:block w-[180px] md:w-[240px] lg:w-[259px]">
               <input
                 type="text"
@@ -343,7 +407,7 @@ export default function DashboardLayout({
               </svg>
             </div>
 
-            {/* Notification Bell (37x37 circle, rx=18.5) */}
+            {/* Notification Bell */}
             <button
               className="relative w-[37px] h-[37px] rounded-full border border-[#E6E6E6] bg-white flex items-center justify-center text-dark hover:bg-gray-50 transition-colors"
               aria-label="Notifications"
@@ -354,20 +418,32 @@ export default function DashboardLayout({
               <span className="w-2 h-2 rounded-full bg-[#EA4335] absolute top-2 right-2 ring-1 ring-white" />
             </button>
 
-            {/* User Profile Pill Menu (w=67px, h=38px, rx=19 in Figma) */}
-            <div className="flex items-center gap-1.5 h-[38px] pl-1 pr-2.5 rounded-full bg-[#EDEDED] border border-[#E6E6E6] hover:bg-gray-200 transition-colors cursor-pointer">
-              <div className="relative w-[30px] h-[30px] rounded-full overflow-hidden border border-[#E6E6E6] bg-white shrink-0">
-                <Image
-                  src={userAvatar}
-                  alt={userName}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+            {/* User Profile Pill Menu */}
+            <Link
+              href="/dashboard/settings"
+              className="flex items-center gap-1.5 h-[38px] pl-1 pr-2.5 rounded-full bg-[#EDEDED] border border-[#E6E6E6] hover:bg-gray-200 transition-colors cursor-pointer"
+            >
+              {user.photoURL ? (
+                <div className="relative w-[30px] h-[30px] rounded-full overflow-hidden border border-[#E6E6E6] bg-white shrink-0">
+                  <Image
+                    src={user.photoURL}
+                    alt={displayName}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-[30px] h-[30px] rounded-full bg-[#4383F3] text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                  {userInitials}
+                </div>
+              )}
+              <span className="text-xs font-medium text-dark max-w-[80px] truncate hidden sm:inline">
+                {displayName.split(" ")[0]}
+              </span>
               <svg className="w-3.5 h-3.5 text-dark/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-            </div>
+            </Link>
           </div>
         </header>
 

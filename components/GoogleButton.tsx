@@ -1,9 +1,16 @@
-export default function GoogleButton({ onClick }: { onClick?: () => void }) {
+export default function GoogleButton({
+  onClick,
+  disabled = false,
+}: {
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-[52px] h-[52px] rounded-full border border-[#9E9E9E] hover:border-[#4285F4] bg-white hover:bg-gray-50 flex items-center justify-center transition-all shadow-sm hover:shadow active:scale-95 mx-auto"
+      disabled={disabled}
+      className="w-[52px] h-[52px] rounded-full border border-[#9E9E9E] hover:border-[#4285F4] bg-white hover:bg-gray-50 flex items-center justify-center transition-all shadow-sm hover:shadow active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mx-auto"
       aria-label="Sign in with Google"
     >
       <svg className="w-6 h-6" viewBox="0 0 24 24">

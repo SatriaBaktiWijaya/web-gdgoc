@@ -2,10 +2,21 @@
 
 import { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { useAuth } from "@/context/AuthContext";
 
 export default function TeamDetailsPage() {
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const referralCode = "ALPHA-2024";
+
+  const leaderName = user?.displayName || (user?.email ? user.email.split("@")[0] : "Rafi Pratama");
+  const leaderInitials = (leaderName || "RP")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   const handleCopyReferral = () => {
     navigator.clipboard?.writeText(referralCode);
@@ -36,13 +47,21 @@ export default function TeamDetailsPage() {
 
         {/* 3 Member Slot Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
-          {/* Slot 1: Rafi Pratama (Team Leader) */}
+          {/* Slot 1: Team Leader (Current User) */}
           <div className="w-full h-[180px] bg-white border border-[#E3E3E3] rounded-[9.5px] p-6 flex flex-col items-center justify-center text-center shadow-xs">
-            <div className="w-[84px] h-[84px] rounded-full bg-white border border-[#E3E3E3] flex items-center justify-center text-2xl font-bold text-dark shadow-2xs">
-              RP
-            </div>
-            <h3 className="font-semibold text-[16px] text-dark tracking-tight mt-3">
-              Rafi Pratama
+            {user?.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt={leaderName}
+                className="w-[84px] h-[84px] rounded-full object-cover border border-[#E3E3E3] shadow-2xs"
+              />
+            ) : (
+              <div className="w-[84px] h-[84px] rounded-full bg-[#E9F1FF] border border-[#E3E3E3] flex items-center justify-center text-2xl font-bold text-[#4383F3] shadow-2xs">
+                {leaderInitials || "RP"}
+              </div>
+            )}
+            <h3 className="font-semibold text-[16px] text-dark tracking-tight mt-3 truncate max-w-[200px]" title={leaderName}>
+              {leaderName}
             </h3>
             <span className="text-[12.5px] text-[#4383F3] font-medium mt-0.5">
               Team Leader

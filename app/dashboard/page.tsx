@@ -6,11 +6,19 @@ import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import AnnouncementCard from "@/components/dashboard/AnnouncementCard";
 import EventCard from "@/components/dashboard/EventCard";
+import { useAuth } from "@/context/AuthContext";
 
 function DashboardOverviewContent() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const initialView = searchParams.get("view") === "late" ? "late" : "new";
   const [memberView, setMemberView] = useState<"new" | "late">(initialView);
+
+  const firstName = user?.displayName
+    ? user.displayName.split(" ")[0]
+    : user?.email
+    ? user.email.split("@")[0]
+    : null;
 
   const carouselRef = useRef<HTMLDivElement>(null);
 
@@ -158,7 +166,7 @@ function DashboardOverviewContent() {
                   Welcome Back
                 </span>
                 <h2 className="text-2xl sm:text-[28px] font-bold tracking-tight text-white mt-1">
-                  Leclerc, Ready for the Challenge?
+                  {firstName || "Leclerc"}, Ready for the Challenge?
                 </h2>
                 <p className="text-[13px] text-white/85 mt-2 max-w-md leading-relaxed">
                   Ready to innovate? Work with your project team or discover ongoing Googlle Solution Challange initiativess
@@ -263,7 +271,7 @@ function DashboardOverviewContent() {
                   Welcome to GDGOC
                 </span>
                 <h2 className="text-2xl sm:text-[27px] font-bold tracking-tight text-white mt-1">
-                  Welcome Aboard Hamilton!
+                  Welcome Aboard {firstName || "Hamilton"}!
                 </h2>
                 <p className="text-[12.5px] text-white/85 mt-2 leading-relaxed">
                   Ready to innovate? Work with your project team or discover ongoing Googlle Solution Challange initiativess

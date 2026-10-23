@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import FooterSection from "@/components/FooterSection";
 import TopProgressBar from "@/components/TopProgressBar";
 import HeavyScroll from "@/components/HeavyScroll";
+import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
   title: "GDG On Campus Telkom University Purwokerto",
@@ -21,13 +22,16 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-surface relative overflow-x-hidden" suppressHydrationWarning>
-        <TopProgressBar />
-        <Navbar />
-        <HeavyScroll>
-          {children}
-          <FooterSection />
-        </HeavyScroll>
+        <AuthProvider>
+          <TopProgressBar />
+          <Navbar />
+          <HeavyScroll>
+            {children}
+            <FooterSection />
+          </HeavyScroll>
+        </AuthProvider>
       </body>
     </html>
   );
 }
+
