@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "learn-codebase": {
+      "source": "thedotmack/claude-mem",
+      "sourceType": "github",
+      "skillPath": "plugin/skills/learn-codebase/SKILL.md",
+      "computedHash": "9142aab8302123f63d8db49430d1f59e2ff2bdcb885d6b3f054f22f7d92f5791"
+    }
+  }
+}
