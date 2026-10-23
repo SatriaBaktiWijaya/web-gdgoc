@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 interface NavbarProps {
   active?: "Explore" | "Community" | "Core Team" | "Events" | string;
@@ -16,6 +17,7 @@ export default function Navbar({ active: activeProp }: NavbarProps = {}) {
   const headerRef = useRef<HTMLElement>(null);
 
   const pathname = usePathname();
+  const { user } = useAuth();
 
   const [isHeroSection, setIsHeroSection] = useState(pathname === "/");
   const [activeSection, setActiveSection] = useState<string>("Explore");
@@ -456,13 +458,34 @@ export default function Navbar({ active: activeProp }: NavbarProps = {}) {
             })}
           </nav>
 
-          {/* Sign In CTA Button (x=1133px, w=108px, h=43px, rx=10px) */}
-          <Link
-            href="/signin"
-            className="shrink-0 w-[108px] h-[43px] bg-[#4383F3] hover:bg-[#3876e0] text-white font-medium text-[15px] rounded-[10px] flex items-center justify-center transition-all shadow-sm active:scale-95"
-          >
-            Sign In
-          </Link>
+          {/* Sign In / Dashboard CTA Button */}
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="shrink-0 min-w-[118px] h-[43px] px-3.5 bg-[#4383F3] hover:bg-[#3876e0] text-white font-medium text-[15px] rounded-[10px] flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95"
+            >
+              {user.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName || "User"}
+                  className="w-5 h-5 rounded-full object-cover border border-white/50 shrink-0"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              )}
+              <span>Dashboard</span>
+            </Link>
+          ) : (
+            <Link
+              href="/signin"
+              className="shrink-0 w-[108px] h-[43px] bg-[#4383F3] hover:bg-[#3876e0] text-white font-medium text-[15px] rounded-[10px] flex items-center justify-center transition-all shadow-sm active:scale-95"
+            >
+              Sign In
+            </Link>
+          )}
         </div>
       </div>
 
@@ -521,12 +544,33 @@ export default function Navbar({ active: activeProp }: NavbarProps = {}) {
           </nav>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <Link
-              href="/signin"
-              className="text-xs sm:text-sm font-medium bg-[#4383F3] text-white px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-[8px] hover:bg-[#3876e0] transition-colors shrink-0"
-            >
-              Sign In
-            </Link>
+            {user ? (
+              <Link
+                href="/dashboard"
+                className="text-xs sm:text-sm font-medium bg-[#4383F3] text-white px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-[8px] hover:bg-[#3876e0] transition-colors shrink-0 flex items-center gap-1.5"
+              >
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName || "User"}
+                    className="w-4 h-4 rounded-full object-cover border border-white/50 shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                )}
+                <span>Dashboard</span>
+              </Link>
+            ) : (
+              <Link
+                href="/signin"
+                className="text-xs sm:text-sm font-medium bg-[#4383F3] text-white px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-[8px] hover:bg-[#3876e0] transition-colors shrink-0"
+              >
+                Sign In
+              </Link>
+            )}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-1.5 text-dark rounded-lg hover:bg-gray-100"
