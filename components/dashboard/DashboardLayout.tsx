@@ -253,11 +253,11 @@ export default function DashboardLayout({
               <div className="flex items-center gap-2.5 min-w-0">
                 {user.photoURL ? (
                   <div className="relative w-[36px] h-[36px] rounded-full overflow-hidden border border-[#E6E6E6] bg-white shrink-0">
-                    <Image
+                    <img
                       src={user.photoURL}
                       alt={displayName}
-                      fill
-                      className="object-cover"
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
                     />
                   </div>
                 ) : (
@@ -425,11 +425,11 @@ export default function DashboardLayout({
             >
               {user.photoURL ? (
                 <div className="relative w-[30px] h-[30px] rounded-full overflow-hidden border border-[#E6E6E6] bg-white shrink-0">
-                  <Image
+                  <img
                     src={user.photoURL}
                     alt={displayName}
-                    fill
-                    className="object-cover"
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
                   />
                 </div>
               ) : (
